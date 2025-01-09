@@ -114,15 +114,6 @@
       }
 
       const creditMap = {
-        PH23221: 1,
-        PH23211: 3,
-        MA23211: 4,
-        HS23211: 2,
-        GE23221: 1,
-        GE23213: 2,
-        GE23211: 3,
-        AD23221: 1,
-        AD23211: 3,
         GE23311: 2,
         MA23311: 4,
         CS23311: 3,
@@ -130,13 +121,14 @@
         AL23311: 3,
         EC23331: 4,
         CS23321: 1,
-        CS23322: 1
+        CS23322: 1,
+        CS23ICI:1
       };
 
       const gradePoints = grades.map(convertGradeToPoint);
       const credits = subjectCodes.map((code) => creditMap[code] || 0);
 
-      // Prompt user for any extra courses
+      /*// Prompt user for any extra courses
       if (confirm("Do you have any additional courses to include?")) {
         const extraGrade = prompt("Enter the grade for the extra course (O, A+, A, etc.):");
         const extraCredit = parseInt(prompt("Enter the credits for the extra course:"), 10);
@@ -148,13 +140,13 @@
         } else {
           alert("Invalid grade or credit entered. Skipping extra course.");
         }
-      }
+      }*/
 
       console.log("Grade Points:", gradePoints);
       console.log("Credits:", credits);
 
       const cgpa = calculateWeightedCGPA(gradePoints, credits);
-      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)}`;
+      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(3)}`;
     });
 
     async function extractTextFromPDF(file) {
