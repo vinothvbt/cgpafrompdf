@@ -158,7 +158,7 @@
       const cgpa = calculateWeightedCGPA(gradePoints, credits);
 
       // Display the CGPA
-      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)}`;
+      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)+10}`;
     });
 
     async function extractTextFromPDF(file) {
