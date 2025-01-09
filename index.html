@@ -6,7 +6,6 @@
   <title>CGPA Calculator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
   <style>
-    /* General body styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -18,7 +17,6 @@
       background: #f4f4f4;
     }
 
-    /* Wrapper for the content */
     .container {
       width: 90%;
       max-width: 400px;
@@ -29,7 +27,6 @@
       text-align: center;
     }
 
-    /* Input styling */
     input[type="file"] {
       display: block;
       margin: 10px auto;
@@ -40,7 +37,6 @@
       width: 100%;
     }
 
-    /* Button styling */
     button {
       background-color: #007bff;
       color: white;
@@ -57,14 +53,12 @@
       background-color: #0056b3;
     }
 
-    /* Result display */
     #result {
       margin-top: 20px;
       font-size: 18px;
       color: #333;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 600px) {
       .container {
         width: 95%;
@@ -80,7 +74,6 @@
     <div id="result"></div>
   </div>
   <script>
-    // Set the worker source for PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
 
     document.getElementById("calculateBtn").addEventListener("click", async () => {
@@ -103,10 +96,8 @@
       const lines = pdfText.split(/\n/);
 
       lines.forEach((line) => {
-        // Match subject codes
-        const codeMatch = line.match(/([A-Z]{2}\d{5})/); // Matches codes like "PH23221"
-        // Match grades
-        const gradeMatch = line.match(/\b([OAB]+[+]?|F)\b/); // Matches grades like "O", "A+", etc.
+        const codeMatch = line.match(/([A-Z]{2}\d{5})/);
+        const gradeMatch = line.match(/\b([OAB]+[+]?|F)\b/);
 
         if (codeMatch && gradeMatch) {
           subjectCodes.push(codeMatch[1].trim());
@@ -114,7 +105,6 @@
         }
       });
 
-      // Debugging: Log extracted data
       console.log("Extracted Grades:", grades);
       console.log("Extracted Subject Codes:", subjectCodes);
 
@@ -123,7 +113,6 @@
         return;
       }
 
-      // Define subject credits using subject codes
       const creditMap = {
         PH23221: 1,
         PH23211: 3,
@@ -144,21 +133,28 @@
         CS23322: 1
       };
 
-      // Map grades to grade points
       const gradePoints = grades.map(convertGradeToPoint);
-
-      // Get the corresponding credit points for each subject
       const credits = subjectCodes.map((code) => creditMap[code] || 0);
 
-      // Debugging: Log grade points and credits
+      // Prompt user for any extra courses
+      if (confirm("Do you have any additional courses to include?")) {
+        const extraGrade = prompt("Enter the grade for the extra course (O, A+, A, etc.):");
+        const extraCredit = parseInt(prompt("Enter the credits for the extra course:"), 10);
+
+        if (extraGrade && !isNaN(extraCredit)) {
+          grades.push(extraGrade.toUpperCase());
+          gradePoints.push(convertGradeToPoint(extraGrade));
+          credits.push(extraCredit);
+        } else {
+          alert("Invalid grade or credit entered. Skipping extra course.");
+        }
+      }
+
       console.log("Grade Points:", gradePoints);
       console.log("Credits:", credits);
 
-      // Calculate CGPA
       const cgpa = calculateWeightedCGPA(gradePoints, credits);
-
-      // Display the CGPA
-      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)+10}`;
+      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)}`;
     });
 
     async function extractTextFromPDF(file) {
@@ -202,7 +198,7 @@
         totalCredits += credits[index];
       });
 
-      return totalCredits > 0 ? totalPoints / totalCredits : 0; // Avoid division by zero
+      return totalCredits > 0 ? totalPoints / totalCredits : 0;
     }
   </script>
 </body>
