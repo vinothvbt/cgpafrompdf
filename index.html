@@ -83,7 +83,8 @@
       if (!file) {
         alert("Please upload a PDF file.");
         return;
-      }
+      }
+
       const grades = [];
       const subjectCodes = [];
       const pdfText = await extractTextFromPDF(file);
@@ -145,7 +146,7 @@
       console.log("Credits:", credits);
 
       const cgpa = calculateWeightedCGPA(gradePoints, credits);
-      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(3)}`;
+      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)}`;
     });
 
     async function extractTextFromPDF(file) {
