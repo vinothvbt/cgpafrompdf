@@ -4,193 +4,611 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CGPA Calculator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script type="module" src="pdf.mjs"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 20px;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: black;
+      align-items: flex-start;
     }
 
     .container {
-      width: 90%;
-      max-width: 400px;
+      width: 100%;
+      max-width: 600px;
       background: white;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+      margin: 20px;
+    }
+
+    .header {
       text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #333;
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .header p {
+      color: #666;
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .upload-section {
+      margin-bottom: 25px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 15px;
     }
 
     input[type="file"] {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
       width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px dashed #ddd;
+      border-radius: 10px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    input[type="file"]:hover {
+      border-color: #007bff;
+      background: #e3f2fd;
     }
 
     button {
-      background-color:green;
+      background: linear-gradient(135deg, #28a745, #20c997);
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 15px 25px;
       font-size: 16px;
-      border-radius: 5px;
+      font-weight: 600;
+      border-radius: 10px;
       cursor: pointer;
       width: 100%;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
     }
 
     button:hover {
-      background-color:blue;
+      background: linear-gradient(135deg, #218838, #1e7e34);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     #result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #333;
+      margin-top: 25px;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
-    @media (max-width: 600px) {
-      .container {
-        width: 95%;
+    .info-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 25px;
+      border-left: 4px solid #007bff;
+    }
+
+    .info-section h3 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 18px;
+    }
+
+    .info-section ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .info-section li {
+      margin: 5px 0;
+      color: #6c757d;
+    }
+
+    .grading-scale {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .grade-item {
+      text-align: center;
+      padding: 8px;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+    }
+
+    .grade-item .grade {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .grade-item .points {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
       }
+      
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .grading-scale {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 5px;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>CGPA Calculator</h1>
-    <input type="file" id="fileInput" />
-    <button id="calculateBtn">Calculate CGPA</button>
+    <div class="header">
+      <h1>RIT Chennai CGPA Calculator</h1>
+      <p>Upload your mark sheet PDF to calculate your CGPA automatically</p>
+    </div>
+    
+    <div class="upload-section">
+      <input type="file" id="fileInput" accept=".pdf" />
+      <button id="calculateBtn">
+        <span id="buttonText">Calculate CGPA</span>
+      </button>
+      <button id="demoBtn" style="background: linear-gradient(135deg, #6c757d, #495057); margin-top: 10px;">
+        <span>Try Demo</span>
+      </button>
+    </div>
+    
     <div id="result"></div>
+    
+    <div class="info-section">
+      <h3>How to use:</h3>
+      <ul>
+        <li>Upload your official RIT Chennai mark sheet PDF</li>
+        <li>The tool will automatically extract grades and subject codes</li>
+        <li>CGPA will be calculated using the standard 10-point grading system</li>
+        <li>View detailed breakdown of all subjects and credits</li>
+      </ul>
+      
+      <h3>Grading Scale (10-point system):</h3>
+      <div class="grading-scale">
+        <div class="grade-item">
+          <div class="grade" style="color: #28a745;">O</div>
+          <div class="points">10 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #20c997;">A+</div>
+          <div class="points">9 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #17a2b8;">A</div>
+          <div class="points">8 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #ffc107;">B+</div>
+          <div class="points">7 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #fd7e14;">B</div>
+          <div class="points">6 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #6f42c1;">C</div>
+          <div class="points">5 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #e83e8c;">D</div>
+          <div class="points">4 pts</div>
+        </div>
+        <div class="grade-item">
+          <div class="grade" style="color: #dc3545;">F</div>
+          <div class="points">0 pts</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+  <script type="module">
+    // Import PDF.js
+    import * as pdfjsLib from './pdf.mjs';
+    
+    // Set up the worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.mjs';
+
+    // Demo button functionality
+    document.getElementById("demoBtn").addEventListener("click", () => {
+      const demoData = [
+        { subjectCode: 'CS23111', grade: 'A+', credits: 3, gradePoint: 9 },
+        { subjectCode: 'MA23211', grade: 'O', credits: 4, gradePoint: 10 },
+        { subjectCode: 'PH23211', grade: 'A', credits: 3, gradePoint: 8 },
+        { subjectCode: 'CS23121', grade: 'A+', credits: 1, gradePoint: 9 },
+        { subjectCode: 'GE23211', grade: 'B+', credits: 3, gradePoint: 7 },
+        { subjectCode: 'HS23111', grade: 'A', credits: 2, gradePoint: 8 }
+      ];
+      
+      const cgpa = calculateCGPA(demoData);
+      displayResults(cgpa, demoData);
+    });
 
     document.getElementById("calculateBtn").addEventListener("click", async () => {
       const fileInput = document.getElementById("fileInput");
       const file = fileInput.files[0];
+      const resultDiv = document.getElementById("result");
+      const button = document.getElementById("calculateBtn");
+      const buttonText = document.getElementById("buttonText");
 
       if (!file) {
         alert("Please upload a PDF file.");
         return;
       }
 
-      const grades = [];
-      const subjectCodes = [];
-      const pdfText = await extractTextFromPDF(file);
-
-      // Log the raw PDF text
-      console.log("Extracted PDF Text:", pdfText);
-
-      // Split the text into lines
-      const lines = pdfText.split(/\n/);
-
-      lines.forEach((line) => {
-        const codeMatch = line.match(/([A-Z]{2}\d{5})/);
-        const gradeMatch = line.match(/\b([OAB]+[+]?|F)\b/);
-
-        if (codeMatch && gradeMatch) {
-          subjectCodes.push(codeMatch[1].trim());
-          grades.push(gradeMatch[1].trim());
-        }
-      });
-
-      console.log("Extracted Grades:", grades);
-      console.log("Extracted Subject Codes:", subjectCodes);
-
-      if (grades.length === 0 || subjectCodes.length === 0) {
-        alert("No valid data found. Please check the PDF format.");
+      if (file.type !== "application/pdf") {
+        alert("Please upload a valid PDF file.");
         return;
       }
 
-      const creditMap = {
-        GE23311: 2,
-        MA23311: 4,
-        CS23311: 3,
-        CS23312: 3,
-        AL23311: 3,
-        EC23331: 4,
-        CS23321: 1,
-        CS23322: 1,
-        CS23ICI:1
-      };
+      // Show loading state
+      button.disabled = true;
+      buttonText.innerHTML = '<span class="loading"></span>Processing PDF...';
+      resultDiv.innerHTML = '<div style="color: #007bff; text-align: center; padding: 20px;">Extracting data from PDF... Please wait.</div>';
 
-      const gradePoints = grades.map(convertGradeToPoint);
-      const credits = subjectCodes.map((code) => creditMap[code] || 0);
+      try {
+        const pdfText = await extractTextFromPDF(file);
+        console.log("Extracted PDF Text:", pdfText);
 
-      /*// Prompt user for any extra courses
-      if (confirm("Do you have any additional courses to include?")) {
-        const extraGrade = prompt("Enter the grade for the extra course (O, A+, A, etc.):");
-        const extraCredit = parseInt(prompt("Enter the credits for the extra course:"), 10);
+        const extractedData = extractGradesAndSubjects(pdfText);
+        console.log("Extracted Data:", extractedData);
 
-        if (extraGrade && !isNaN(extraCredit)) {
-          grades.push(extraGrade.toUpperCase());
-          gradePoints.push(convertGradeToPoint(extraGrade));
-          credits.push(extraCredit);
-        } else {
-          alert("Invalid grade or credit entered. Skipping extra course.");
+        if (extractedData.length === 0) {
+          resultDiv.innerHTML = `
+            <div style="color: #dc3545; text-align: center; padding: 20px; background: #f8d7da; border-radius: 10px; border: 1px solid #f5c6cb;">
+              <strong>No valid grade data found!</strong><br>
+              Please ensure you uploaded a valid RIT Chennai mark sheet PDF.<br>
+              <small>The PDF should contain subject codes (like CS23111) and grades (like O, A+, A, etc.)</small>
+            </div>`;
+          return;
         }
-      }*/
 
-      console.log("Grade Points:", gradePoints);
-      console.log("Credits:", credits);
+        const cgpa = calculateCGPA(extractedData);
+        displayResults(cgpa, extractedData);
 
-      const cgpa = calculateWeightedCGPA(gradePoints, credits);
-      document.getElementById("result").innerText = `CGPA: ${cgpa.toFixed(2)}`;
+      } catch (error) {
+        console.error("Error processing PDF:", error);
+        resultDiv.innerHTML = `
+          <div style="color: #dc3545; text-align: center; padding: 20px; background: #f8d7da; border-radius: 10px; border: 1px solid #f5c6cb;">
+            <strong>Error processing PDF!</strong><br>
+            ${error.message || 'Please try again or check if the file is a valid PDF.'}<br>
+            <small>Make sure the PDF is not password protected and contains readable text.</small>
+          </div>`;
+      } finally {
+        // Reset button state
+        button.disabled = false;
+        buttonText.innerHTML = 'Calculate CGPA';
+      }
     });
 
     async function extractTextFromPDF(file) {
       const fileReader = new FileReader();
-      const pdfData = await new Promise((resolve) => {
+      const pdfData = await new Promise((resolve, reject) => {
         fileReader.onload = () => resolve(new Uint8Array(fileReader.result));
+        fileReader.onerror = () => reject(new Error("Failed to read file"));
         fileReader.readAsArrayBuffer(file);
       });
 
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
       let text = "";
+      
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        text += content.items.map((item) => item.str).join(" ");
+        const pageText = content.items.map((item) => item.str).join(" ");
+        text += pageText + "\n";
       }
+      
       return text;
     }
 
-    function convertGradeToPoint(grade) {
-      const gradeMap = {
-        "O": 10,
-        "A+": 9,
-        "A": 8,
-        "B+": 7,
-        "B": 6,
-        "C": 5,
-        "D": 4,
-        "E": 3,
-        "F": 0,
+    function extractGradesAndSubjects(pdfText) {
+      const extractedData = [];
+      const lines = pdfText.split(/\n+/);
+      
+      // Multiple patterns to handle different PDF formats
+      const patterns = [
+        // Pattern 1: Subject code followed by grade (common in RIT)
+        /([A-Z]{2}\d{5})\s+.*?\s+([OAB]+[+]?|C|D|E|F|U)\s/gi,
+        // Pattern 2: Grade: <grade> format
+        /Grade\s*:\s*([OAB]+[+]?|C|D|E|F|U)/gi,
+        // Pattern 3: Subject Code: <code> format  
+        /Subject\s*Code\s*:\s*([A-Z]{2}\d{5})/gi
+      ];
+
+      let tempSubjects = [];
+      let tempGrades = [];
+
+      lines.forEach((line, index) => {
+        const cleanLine = line.trim();
+        
+        // Try pattern 1 first (most common)
+        const match1 = cleanLine.match(/([A-Z]{2}\d{5})\s+.*?\s+([OAB]+[+]?|C|D|E|F|U)\s/i);
+        if (match1) {
+          const subjectCode = match1[1];
+          const grade = match1[2];
+          const credits = getCreditsForSubject(subjectCode);
+          
+          extractedData.push({
+            subjectCode: subjectCode,
+            grade: grade.toUpperCase(),
+            credits: credits,
+            gradePoint: convertGradeToPoint(grade)
+          });
+          return;
+        }
+
+        // Try pattern 2 and 3 (for structured formats)
+        const gradeMatch = cleanLine.match(/Grade\s*:\s*([OAB]+[+]?|C|D|E|F|U)/i);
+        const codeMatch = cleanLine.match(/Subject\s*Code\s*:\s*([A-Z]{2}\d{5})/i);
+        
+        if (gradeMatch) tempGrades.push(gradeMatch[1].toUpperCase());
+        if (codeMatch) tempSubjects.push(codeMatch[1]);
+      });
+
+      // Match temporary subjects and grades if they exist
+      const minLength = Math.min(tempSubjects.length, tempGrades.length);
+      for (let i = 0; i < minLength; i++) {
+        const credits = getCreditsForSubject(tempSubjects[i]);
+        extractedData.push({
+          subjectCode: tempSubjects[i],
+          grade: tempGrades[i],
+          credits: credits,
+          gradePoint: convertGradeToPoint(tempGrades[i])
+        });
+      }
+
+      return extractedData;
+    }
+
+    function getCreditsForSubject(subjectCode) {
+      // RIT Chennai typical credit structure based on common patterns
+      const creditMap = {
+        // Engineering Mathematics
+        'MA23111': 4, 'MA23211': 4, 'MA23311': 4, 'MA23411': 4,
+        
+        // Physics/Chemistry
+        'PH23111': 3, 'PH23211': 3, 'PH23221': 1, // Physics + Lab
+        'CY23111': 3, 'CY23211': 3, 'CY23221': 1, // Chemistry + Lab
+        
+        // Computer Science Core
+        'CS23111': 3, 'CS23211': 3, 'CS23311': 3, 'CS23411': 3,
+        'CS23112': 3, 'CS23212': 3, 'CS23312': 3, 'CS23412': 3,
+        'CS23121': 1, 'CS23221': 1, 'CS23321': 1, 'CS23421': 1, // Labs
+        'CS23122': 1, 'CS23222': 1, 'CS23322': 1, 'CS23422': 1, // Labs
+        
+        // Electronics and Communication  
+        'EC23111': 3, 'EC23211': 3, 'EC23311': 3, 'EC23411': 3,
+        'EC23331': 4, 'EC23121': 1, 'EC23221': 1, 'EC23321': 1,
+        
+        // General Engineering
+        'GE23111': 3, 'GE23211': 3, 'GE23311': 2, 'GE23411': 2,
+        'GE23213': 2, 'GE23221': 1, 'GE23321': 1,
+        
+        // Humanities and Social Sciences
+        'HS23111': 2, 'HS23211': 2, 'HS23311': 2, 'HS23411': 2,
+        
+        // Additional/Elective
+        'AD23111': 3, 'AD23211': 3, 'AD23221': 1,
+        'AL23111': 3, 'AL23211': 3, 'AL23311': 3, 'AL23411': 3,
+        
+        // English/Communication
+        'EN23111': 2, 'EN23211': 2,
+        
+        // Environmental Science
+        'EV23111': 0, // Often non-credit bearing
+        
+        // Value Added Courses
+        'VA23111': 1, 'VA23211': 1,
+        
+        // Project Work
+        'PR23411': 6, 'PR23421': 10,
+        
+        // Industrial Training
+        'IT23411': 1,
+        
+        // Comprehensive Viva
+        'CV23411': 1,
+        
+        // Internship/Project
+        'CS23ICI': 1, 'CS23PW1': 2, 'CS23PW2': 4
       };
+
+      // Return mapped credits or default based on subject type
+      if (creditMap[subjectCode]) {
+        return creditMap[subjectCode];
+      }
+
+      // Default credit assignment based on subject code pattern
+      if (subjectCode.endsWith('21') || subjectCode.endsWith('22')) {
+        return 1; // Lab subjects typically 1 credit
+      } else if (subjectCode.includes('MA')) {
+        return 4; // Mathematics typically 4 credits
+      } else if (subjectCode.includes('PH') || subjectCode.includes('CY')) {
+        return 3; // Physics/Chemistry theory typically 3 credits
+      } else {
+        return 3; // Default for other theory subjects
+      }
+    }
+
+    function convertGradeToPoint(grade) {
+      // Standard 10-point grading system used in most Indian technical institutes
+      const gradeMap = {
+        "O": 10,    // Outstanding
+        "A+": 9,    // Excellent
+        "A": 8,     // Very Good
+        "B+": 7,    // Good
+        "B": 6,     // Above Average
+        "C": 5,     // Average
+        "D": 4,     // Below Average (Pass)
+        "E": 3,     // Poor (Pass)
+        "F": 0,     // Fail
+        "U": 0,     // Unsatisfactory (Fail)
+        "I": 0,     // Incomplete
+        "W": 0      // Withdrawal
+      };
+      
       return gradeMap[grade.toUpperCase()] || 0;
     }
 
-    function calculateWeightedCGPA(gradePoints, credits) {
-      let totalPoints = 0;
+    function calculateCGPA(extractedData) {
+      let totalGradePoints = 0;
       let totalCredits = 0;
 
-      gradePoints.forEach((gp, index) => {
-        totalPoints += gp * credits[index];
-        totalCredits += credits[index];
+      extractedData.forEach((subject) => {
+        const gradePoints = subject.gradePoint * subject.credits;
+        totalGradePoints += gradePoints;
+        totalCredits += subject.credits;
+        
+        console.log(`${subject.subjectCode}: ${subject.grade} (${subject.gradePoint}) × ${subject.credits} credits = ${gradePoints} points`);
       });
 
-      return totalCredits > 0 ? totalPoints / totalCredits : 0;
+      console.log(`Total Grade Points: ${totalGradePoints}`);
+      console.log(`Total Credits: ${totalCredits}`);
+
+      return totalCredits > 0 ? totalGradePoints / totalCredits : 0;
+    }
+
+    function displayResults(cgpa, extractedData) {
+      const resultDiv = document.getElementById("result");
+      
+      let html = `
+        <div style="margin-top: 20px;">
+          <h3 style="color: #28a745; margin-bottom: 15px;">CGPA Calculation Results</h3>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <h4 style="margin: 0; font-size: 24px; color: #007bff;">CGPA: ${cgpa.toFixed(2)}</h4>
+            <p style="margin: 5px 0 0 0; color: #6c757d;">Calculated from ${extractedData.length} subjects</p>
+          </div>
+          
+          <details style="margin-top: 15px;">
+            <summary style="cursor: pointer; font-weight: bold; margin-bottom: 10px;">View Subject-wise Breakdown</summary>
+            <div style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                  <tr style="background: #e9ecef;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Subject Code</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Grade</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Credits</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Grade Points</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+      
+      extractedData.forEach((subject) => {
+        html += `
+          <tr>
+            <td style="padding: 6px; border: 1px solid #ddd;">${subject.subjectCode}</td>
+            <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: ${getGradeColor(subject.grade)}">${subject.grade}</td>
+            <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${subject.credits}</td>
+            <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${(subject.gradePoint * subject.credits).toFixed(1)}</td>
+          </tr>`;
+      });
+      
+      const totalCredits = extractedData.reduce((sum, subject) => sum + subject.credits, 0);
+      const totalGradePoints = extractedData.reduce((sum, subject) => sum + (subject.gradePoint * subject.credits), 0);
+      
+      html += `
+                </tbody>
+                <tfoot>
+                  <tr style="background: #f8f9fa; font-weight: bold;">
+                    <td style="padding: 8px; border: 1px solid #ddd;">Total</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">-</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalCredits}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${totalGradePoints.toFixed(1)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </details>
+          
+          <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 12px; color: #1976d2;">
+            <strong>Note:</strong> This calculation is based on the standard 10-point grading system. 
+            Please verify the results with your official transcript.
+          </div>
+        </div>`;
+      
+      resultDiv.innerHTML = html;
+    }
+
+    function getGradeColor(grade) {
+      const colors = {
+        'O': '#28a745',   // Green
+        'A+': '#20c997',  // Teal
+        'A': '#17a2b8',   // Info blue
+        'B+': '#ffc107', // Warning yellow
+        'B': '#fd7e14',   // Orange
+        'C': '#6f42c1',   // Purple
+        'D': '#e83e8c',   // Pink
+        'E': '#dc3545',   // Danger red
+        'F': '#6c757d',   // Gray
+        'U': '#6c757d'    // Gray
+      };
+      return colors[grade] || '#6c757d';
     }
   </script>
 </body>
