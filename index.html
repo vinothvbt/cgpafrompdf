@@ -217,6 +217,9 @@
       <button id="demoBtn" style="background: linear-gradient(135deg, #6c757d, #495057); margin-top: 10px;">
         <span>Try Demo</span>
       </button>
+      <button id="manualBtn" style="background: linear-gradient(135deg, #17a2b8, #138496); margin-top: 10px;">
+        <span>Manual Input</span>
+      </button>
     </div>
     
     <div id="result"></div>
@@ -273,6 +276,99 @@
     
     // Set up the worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.mjs';
+
+    // Manual input functionality
+    document.getElementById("manualBtn").addEventListener("click", () => {
+      showManualInputModal();
+    });
+
+    function showManualInputModal() {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.5); display: flex; justify-content: center; 
+        align-items: center; z-index: 1000;
+      `;
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+          <h3 style="margin-top: 0;">Manual CGPA Input</h3>
+          <p>Enter your subjects and grades manually:</p>
+          <div id="manualInputs">
+            <div class="manual-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <input type="text" placeholder="Subject Code (e.g., CS23111)" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+              <select style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                <option value="">Grade</option>
+                <option value="O">O (10)</option>
+                <option value="A+">A+ (9)</option>
+                <option value="A">A (8)</option>
+                <option value="B+">B+ (7)</option>
+                <option value="B">B (6)</option>
+                <option value="C">C (5)</option>
+                <option value="D">D (4)</option>
+                <option value="E">E (3)</option>
+                <option value="F">F (0)</option>
+              </select>
+              <input type="number" placeholder="Credits" min="1" max="10" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+          </div>
+          <button onclick="addManualRow()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 10px;">Add Row</button>
+          <button onclick="calculateManualCGPA()" style="background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 10px;">Calculate</button>
+          <button onclick="closeManualModal()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px;">Close</button>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      window.currentModal = modal;
+      
+      // Add more rows by default
+      for(let i = 0; i < 4; i++) addManualRow();
+    }
+
+    window.addManualRow = function() {
+      const container = document.getElementById('manualInputs');
+      const newRow = container.firstElementChild.cloneNode(true);
+      newRow.querySelectorAll('input').forEach(input => input.value = '');
+      newRow.querySelector('select').value = '';
+      container.appendChild(newRow);
+    }
+
+    window.calculateManualCGPA = function() {
+      const rows = document.querySelectorAll('.manual-row');
+      const extractedData = [];
+      
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input, select');
+        const subjectCode = inputs[0].value.trim();
+        const grade = inputs[1].value;
+        const credits = parseInt(inputs[2].value);
+        
+        if (subjectCode && grade && credits) {
+          extractedData.push({
+            subjectCode: subjectCode,
+            grade: grade,
+            credits: credits,
+            gradePoint: convertGradeToPoint(grade)
+          });
+        }
+      });
+      
+      if (extractedData.length === 0) {
+        alert('Please enter at least one complete subject entry.');
+        return;
+      }
+      
+      const cgpa = calculateCGPA(extractedData);
+      displayResults(cgpa, extractedData);
+      closeManualModal();
+    }
+
+    window.closeManualModal = function() {
+      if (window.currentModal) {
+        document.body.removeChild(window.currentModal);
+        window.currentModal = null;
+      }
+    }
 
     // Demo button functionality
     document.getElementById("demoBtn").addEventListener("click", () => {
